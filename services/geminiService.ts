@@ -1,11 +1,82 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import type { MarketAnalysisResult, CompetitorAnalysisResult, GoToMarketStrategyResult } from '../types';
+import type { MarketAnalysisResult, CompetitorAnalysisResult, GoToMarketStrategyResult, TrendDiscoveryResult, AgentSolutionResult } from '../types';
 
 if (!process.env.API_KEY) {
   throw new Error("API_KEY environment variable is not set.");
 }
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+// --- Trend Discovery Agent (Agent 0) ---
+export const getTrendingTopics = async (areaOfInterest: string): Promise<TrendDiscoveryResult> => {
+  const prompt = `
+    You are a trend-spotting expert for new business and product ideas.
+    Your task is to analyze the provided "Area of Interest" to identify 5 distinct, emerging trends, products, or user needs that are gaining traction right now.
+    Use your web search capabilities to look at Google Trends, popular forums (like Reddit), tech news, and social media discussions to find what's current.
+
+    **Area of Interest:**
+    "${areaOfInterest}"
+
+    **Your Mission:**
+    1.  **Deep Research:** Conduct web research to find specific, actionable trends within the given area. Avoid generic topics. Focus on new software, apps, websites, or specific user problems being discussed.
+    2.  **Identify 5 Trends:** Curate a list of the 5 most promising trends.
+    3.  **Provide Details:** For each trend, you must provide:
+        - A concise \`topicName\`.
+        - A \`reasonForTrend\`, explaining why this is gaining traction now.
+        - An \`exampleDiscussion\`, which is a realistic quote you might find on a forum like Reddit or Twitter discussing this topic.
+
+    **Output Format:**
+    You MUST respond with a single, valid JSON object. Do not add any commentary or markdown formatting before or after the JSON. The JSON structure MUST be as follows:
+    {
+      "trendingTopics": [
+        {
+          "topicName": "The name of the specific trend.",
+          "reasonForTrend": "A brief explanation of why this is a growing trend.",
+          "exampleDiscussion": "A realistic user quote expressing a need or opinion on this topic."
+        }
+      ]
+    }
+  `;
+
+  // FIX: Hoist response variable to be accessible in the catch block.
+  let response: any;
+  try {
+    response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction: "You are a trend-spotting expert for new business ideas. Your goal is to identify emerging trends based on web research. Your output must be a single, valid JSON object following the specified structure, containing a 'trendingTopics' array.",
+        tools: [{googleSearch: {}}],
+      },
+    });
+
+    const groundingMetadata = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+    let jsonText = response.text.trim();
+
+    if (jsonText.startsWith("```json")) {
+        jsonText = jsonText.substring(7, jsonText.length - 3).trim();
+    } else if (jsonText.startsWith("```")) {
+        jsonText = jsonText.substring(3, jsonText.length - 3).trim();
+    }
+
+    const parsedData = JSON.parse(jsonText);
+    
+    if (!parsedData.trendingTopics || !Array.isArray(parsedData.trendingTopics)) {
+        throw new Error("Invalid data structure received from API: missing trendingTopics array.");
+    }
+    return { ...parsedData, groundingMetadata };
+  } catch (error) {
+    console.error("Error fetching or parsing trend discovery:", error);
+    if (error instanceof SyntaxError) {
+      // FIX: response is now in scope, allowing access to the raw response text for debugging.
+      const rawResponseText = response.text; // Assume response is in scope
+      console.error("Failed to parse JSON. Raw AI response:", rawResponseText);
+      throw new Error("Failed to parse the AI's response (invalid JSON). Check the console for the raw output.");
+    }
+    throw new Error("An unexpected error occurred communicating with the AI service.");
+  }
+};
+
 
 // --- Market Verification Agent ---
 const marketAnalysisSchema = {
@@ -124,17 +195,11 @@ export const getCompetitorAnalysis = async (industry: string, problem: string): 
 // --- Go-to-Market Strategy Agent ---
 export const getGoToMarketStrategy = async (
   marketAnalysis: MarketAnalysisResult,
-  competitorAnalysis: CompetitorAnalysisResult,
-  industry: string,
-  problem: string
+  competitorAnalysis: CompetitorAnalysisResult
 ): Promise<GoToMarketStrategyResult> => {
   const prompt = `
     You are a senior Go-to-Market strategist and venture capitalist. Your expertise is in evaluating new business ideas based on market data.
     Your task is to analyze the provided market and competitor data to first identify a precise target audience and their core problems, then produce a list of crucial market indicators and strategic red flags.
-
-    **Analysis Context:**
-    - Industry: "${industry}"
-    - Initial Problem Concept: "${problem}"
 
     **Market Verification Data (Agent 1 Output):**
     ${JSON.stringify(marketAnalysis, null, 2)}
@@ -194,18 +259,109 @@ export const getGoToMarketStrategy = async (
     }
     return { ...parsedData, groundingMetadata };
   } catch (error) {
-    let rawResponseText = "Not available";
-    // Attempt to access raw response if possible
-    // This is a hypothetical property; actual error structure may vary
-    if (error instanceof Error && 'response' in error) {
-      // rawResponseText = (error as any).response?.text || rawResponseText;
-    }
-    
-    if (error instanceof SyntaxError) {
-      console.error("Failed to parse JSON. Raw AI response:", rawResponseText);
-      throw new Error("Failed to parse the AI's response (invalid JSON). Check the console for the raw output.");
-    }
     console.error("Error fetching or parsing GTM strategy:", error);
     throw new Error("An unexpected error occurred communicating with the AI service.");
   }
+};
+
+
+// --- Agent Solution (Final Agent) ---
+export const getAgentSolution = async (
+    trendResult: TrendDiscoveryResult,
+    marketResult: MarketAnalysisResult,
+    competitorResult: CompetitorAnalysisResult,
+    gtmResult: GoToMarketStrategyResult
+): Promise<AgentSolutionResult> => {
+    const prompt = `
+    You are the final brain of a multi-agent AI system, a master strategist with the combined knowledge of a world-class software architect, a venture capitalist, a research scientist like Stephen Hawking, a creative problem-solver like Einstein, and a web researcher with the skills of a black-hat hacker.
+    Your mission is to synthesize all the intelligence gathered from the previous agents to produce the world's most detailed, organized, and actionable implementation blueprint for a new digital product.
+
+    **INTELLIGENCE BRIEFING (DATA FROM PREVIOUS AGENTS):**
+
+    **1. Trend Discovery:**
+    ${JSON.stringify(trendResult.trendingTopics, null, 2)}
+
+    **2. Market Verification:**
+    ${JSON.stringify(marketResult, null, 2)}
+
+    **3. Competitor Analysis:**
+    ${JSON.stringify(competitorResult, null, 2)}
+
+    **4. Go-to-Market Strategy:**
+    ${JSON.stringify(gtmResult, null, 2)}
+
+    **YOUR DIRECTIVES:**
+
+    1.  **Synthesize and Envision:** Review all the data above. Formulate a single, cohesive vision for the ideal solution.
+    2.  **Conduct Deep Research:** Use your advanced web search capabilities to find the most modern, efficient, and powerful tools to build this solution. Look for cutting-edge technologies, APIs, and frameworks that competitors are not using.
+    3.  **Architect the Blueprint:** Construct a detailed implementation plan. Address every small point and provide concrete solutions.
+
+    **OUTPUT FORMAT:**
+    You MUST respond with a single, valid JSON object. Do not add any commentary or markdown formatting. The JSON structure MUST be as follows:
+    {
+      "solutionOverview": "A high-level, inspiring summary of the product vision.",
+      "coreFeatures": [
+        {
+          "feature": "A concise name for the core feature.",
+          "description": "A detailed description of how the feature works from a user's perspective.",
+          "userProblemSolved": "Clearly state which specific user pain point this feature directly solves, referencing the market analysis."
+        }
+      ],
+      "techStack": [
+        {
+          "category": "Frontend | Backend | Database | AI / ML Model | Deployment | Other",
+          "tool": "The specific name of the tool, library, or service (e.g., 'React', 'Node.js', 'Gemini Pro API', 'Vercel').",
+          "justification": "A strong, data-driven reason for choosing this tool. Explain why it's better than alternatives for this specific project."
+        }
+      ],
+      "implementationRoadmap": [
+        {
+          "phase": "e.g., 'Phase 1: MVP Launch'",
+          "duration": "An estimated timeframe (e.g., '3-4 Weeks').",
+          "milestones": ["A list of specific, achievable goals for this phase."]
+        }
+      ],
+      "risksAndMitigations": [
+          {
+              "risk": "A potential technical, market, or execution risk.",
+              "mitigation": "A proactive strategy to mitigate this risk."
+          }
+      ],
+      "ethicalConsiderations": "A brief analysis of potential ethical issues (e.g., data privacy, algorithmic bias) and how to address them responsibly."
+    }
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+            config: {
+                systemInstruction: "You are a master AI strategist and solution architect. Your task is to synthesize intelligence from multiple sources and produce a detailed, structured implementation blueprint in JSON format. You must perform deep web research to inform your technical recommendations. Your output must strictly adhere to the provided JSON structure.",
+                tools: [{googleSearch: {}}],
+            },
+        });
+
+        const groundingMetadata = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+        let jsonText = response.text.trim();
+
+        if (jsonText.startsWith("```json")) {
+            jsonText = jsonText.substring(7, jsonText.length - 3).trim();
+        } else if (jsonText.startsWith("```")) {
+            jsonText = jsonText.substring(3, jsonText.length - 3).trim();
+        }
+
+        const parsedData = JSON.parse(jsonText);
+        
+        if (!parsedData.solutionOverview || !parsedData.coreFeatures || !parsedData.techStack || !parsedData.implementationRoadmap) {
+            throw new Error("Invalid data structure received from API for Agent Solution.");
+        }
+        return { ...parsedData, groundingMetadata };
+
+    } catch (error) {
+        console.error("Error fetching or parsing Agent Solution:", error);
+        if (error instanceof SyntaxError) {
+            throw new Error("Failed to parse the AI's response (invalid JSON) for the final blueprint.");
+        }
+        throw new Error("An unexpected error occurred while generating the final blueprint.");
+    }
 };

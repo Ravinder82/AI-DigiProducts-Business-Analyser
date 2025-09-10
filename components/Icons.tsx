@@ -122,6 +122,12 @@ export const HeroBackgroundImage: React.FC<React.SVGProps<SVGSVGElement>> = (pro
     </svg>
 );
 
+export const TrendDiscoveryIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.28m5.94 2.28L21.75 12M9 11.25l-6.12 6.12M9 11.25a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Zm12 6.75a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+    </svg>
+);
+
 export const MarketVerificationIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -139,6 +145,13 @@ export const GoToMarketIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) =
   <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.82m5.84-2.56a14.95 14.95 0 0 0-5.84-2.56m0 0a14.95 14.95 0 0 1-5.84 2.56m5.84-2.56V4.72a.75.75 0 0 1 .72-.75h.01a.75.75 0 0 1 .75.75v4.94m-5.84 0V4.72a.75.75 0 0 0-.72-.75h-.01a.75.75 0 0 0-.75.75v4.94m0 0h3.84m-3.84 0a14.95 14.95 0 0 0-5.84 2.56m5.84-2.56L12 11.23l2.81 2.81m0 0a6 6 0 0 1-7.38 5.84m-2.56-5.84a14.95 14.95 0 0 1 2.56-5.84m0 0L8.77 8.23 11.23 11.23" />
   </svg>
+);
+
+export const AgentSolutionIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.662a2.25 2.25 0 0 0-2.25 2.25v1.5a2.25 2.25 0 0 1-2.25 2.25h-1.5a2.25 2.25 0 0 1-2.25-2.25v-1.5m11.9-3.662a2.25 2.25 0 0 0-2.25-2.25h-1.5a2.25 2.25 0 0 0-2.25 2.25v1.5" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.5a1.125 1.125 0 0 1 1.125-1.125h.008v.008h-.008V12.375A1.125 1.125 0 0 1 3 13.5Zm1.125 0v.008h.008v-.008h-.008Zm.008 0h.008v.008h-.008v-.008Zm2.25 0h.008v.008h-.008V13.5Zm0 .008h.008v.008h-.008v-.008Z" />
+    </svg>
 );
 
 export const IndicatorIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

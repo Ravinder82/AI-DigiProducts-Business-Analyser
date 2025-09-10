@@ -1,14 +1,15 @@
 import React from 'react';
 import type { GoToMarketStrategyResult } from '../types';
-import { IndicatorIcon, RedFlagIcon } from './Icons';
+import { IndicatorIcon, RedFlagIcon, AgentSolutionIcon } from './Icons';
 import AnalysisSection from './AnalysisSection';
 
 interface GoToMarketStrategyResultDisplayProps {
   result: GoToMarketStrategyResult;
+  onGenerateBlueprint: () => void;
   gradientIndex: number;
 }
 
-const GoToMarketStrategyResultDisplay: React.FC<GoToMarketStrategyResultDisplayProps> = ({ result, gradientIndex }) => {
+const GoToMarketStrategyResultDisplay: React.FC<GoToMarketStrategyResultDisplayProps> = ({ result, onGenerateBlueprint, gradientIndex }) => {
   const getGradientClass = (offset: number) => `gradient-bg-${((gradientIndex + offset -1) % 6) + 1}`;
 
   const GradientWrapper: React.FC<{ children: React.ReactNode; offset?: number }> = ({ children, offset = 0 }) => (
@@ -93,6 +94,17 @@ const GoToMarketStrategyResultDisplay: React.FC<GoToMarketStrategyResultDisplayP
               </AnalysisSection>
           </GradientWrapper>
       )}
+
+      <div className="mt-12 text-center animate-fade-in">
+          <button
+            onClick={onGenerateBlueprint}
+            className="inline-flex items-center gap-3 px-8 py-4 text-lg font-semibold text-white bg-brand-primary rounded-lg shadow-lg hover:bg-brand-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary transition-all transform hover:scale-105"
+          >
+            <AgentSolutionIcon className="w-6 h-6" />
+            Final Step: Generate Implementation Blueprint
+          </button>
+      </div>
+
     </div>
   );
 };

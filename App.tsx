@@ -1,15 +1,16 @@
 import React, { useState, useCallback } from 'react';
-import type { MarketAnalysisResult, CompetitorAnalysisResult, GoToMarketStrategyResult } from './types';
-import { getMarketAnalysis, getCompetitorAnalysis, getGoToMarketStrategy } from './services/geminiService';
-import MarketVerificationForm from './components/IndustryInputForm';
+import type { MarketAnalysisResult, CompetitorAnalysisResult, GoToMarketStrategyResult, TrendDiscoveryResult, AgentSolutionResult } from './types';
+import { getTrendingTopics, getMarketAnalysis, getCompetitorAnalysis, getGoToMarketStrategy, getAgentSolution } from './services/geminiService';
+import TrendDiscoveryForm from './components/TrendDiscoveryForm';
+import TrendingTopicsResultDisplay from './components/TrendingTopicsResultDisplay';
 import MarketVerificationResultDisplay from './components/AnalysisResultDisplay';
-import CompetitorAnalysisForm from './components/CompetitorAnalysisForm';
 import CompetitorAnalysisResultDisplay from './components/CompetitorAnalysisResultDisplay';
 import GoToMarketStrategyResultDisplay from './components/GoToMarketStrategyResultDisplay';
-import { LogoIcon, HeroBackgroundImage, MarketVerificationIcon, CompetitorAnalysisIcon, GoToMarketIcon } from './components/Icons';
+import AgentSolutionResultDisplay from './components/AgentSolutionResultDisplay';
+import { LogoIcon, HeroBackgroundImage, MarketVerificationIcon, CompetitorAnalysisIcon, GoToMarketIcon, TrendDiscoveryIcon, AgentSolutionIcon } from './components/Icons';
 import AgentLoadingIndicator from './components/AgentLoadingIndicator';
 
-type Agent = 'marketVerification' | 'competitorAnalysis' | 'goToMarketStrategy';
+type Agent = 'trendDiscovery' | 'marketVerification' | 'competitorAnalysis' | 'goToMarketStrategy' | 'agentSolution';
 
 const goToMarketStrategySteps = [
     "Synthesizing market & competitor data...",
@@ -19,42 +20,97 @@ const goToMarketStrategySteps = [
     "Compiling the final strategic report...",
 ];
 
+const agentSolutionSteps = [
+    "Synthesizing all intelligence reports...",
+    "Performing deep web research for tech stacks...",
+    "Architecting the core solution & features...",
+    "Developing a phased implementation roadmap...",
+    "Analyzing risks and ethical considerations...",
+    "Generating the final implementation blueprint...",
+];
+
+
 const App: React.FC = () => {
-  const [activeAgent, setActiveAgent] = useState<Agent>('marketVerification');
+  const [activeAgent, setActiveAgent] = useState<Agent>('trendDiscovery');
   
-  // State for Market Verification Agent
+  // State for Trend Discovery Agent (Agent 0)
+  const [areaOfInterest, setAreaOfInterest] = useState<string>('');
+  const [trendingTopicsResult, setTrendingTopicsResult] = useState<TrendDiscoveryResult | null>(null);
+
+  // State for Market Verification Agent (Agent 1)
   const [industry, setIndustry] = useState<string>('');
   const [marketAnalysisResult, setMarketAnalysisResult] = useState<MarketAnalysisResult | null>(null);
   
-  // State for Competitor Analysis Agent
+  // State for Competitor Analysis Agent (Agent 2)
   const [competitorIndustry, setCompetitorIndustry] = useState<string>('');
   const [specificProblem, setSpecificProblem] = useState<string>('');
   const [competitorAnalysisResult, setCompetitorAnalysisResult] = useState<CompetitorAnalysisResult | null>(null);
 
-  // State for Go-to-Market Strategy Agent
+  // State for Go-to-Market Strategy Agent (Agent 3)
   const [goToMarketStrategyResult, setGoToMarketStrategyResult] = useState<GoToMarketStrategyResult | null>(null);
+  
+  // State for Agent Solution (Agent 4)
+  const [agentSolutionResult, setAgentSolutionResult] = useState<AgentSolutionResult | null>(null);
 
   // General state
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState<string>('');
 
+  const resetAll = () => {
+    setActiveAgent('trendDiscovery');
+    setAreaOfInterest('');
+    setTrendingTopicsResult(null);
+    setIndustry('');
+    setMarketAnalysisResult(null);
+    setCompetitorIndustry('');
+    setSpecificProblem('');
+    setCompetitorAnalysisResult(null);
+    setGoToMarketStrategyResult(null);
+    setAgentSolutionResult(null);
+    setIsLoading(false);
+    setError(null);
+    setLoadingMessage('');
+  };
+
+  const handleTrendDiscoveryRequest = useCallback(async (area: string) => {
+    if (!area) {
+      setError('Please enter an area of interest to discover trends.');
+      return;
+    }
+    resetAll();
+    setIsLoading(true);
+    setAreaOfInterest(area);
+    setLoadingMessage(`Discovering trends for ${area}...`);
+    try {
+      const result = await getTrendingTopics(area);
+      setTrendingTopicsResult(result);
+    } catch(e) {
+      console.error(e);
+      setError('An error occurred while discovering trends. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const handleMarketAnalysisRequest = useCallback(async (requestedIndustry: string, isDeeper = false) => {
     if (!requestedIndustry) {
-      setError('Please enter an industry to analyze.');
+      setError('Please select a trend or enter an industry to analyze.');
       return;
     }
     setIsLoading(true);
     setError(null);
     setMarketAnalysisResult(null);
-    setCompetitorAnalysisResult(null); // Reset subsequent steps
-    setGoToMarketStrategyResult(null); // Reset subsequent steps
+    setCompetitorAnalysisResult(null);
+    setGoToMarketStrategyResult(null);
+    setAgentSolutionResult(null);
     setIndustry(requestedIndustry);
     setLoadingMessage(isDeeper ? `Conducting deeper analysis for ${requestedIndustry}...` : `Analyzing market for ${requestedIndustry}...`);
 
     try {
       const result = await getMarketAnalysis(requestedIndustry, isDeeper);
       setMarketAnalysisResult(result);
+      setActiveAgent('marketVerification');
     } catch (e) {
       console.error(e);
       setError('An error occurred while analyzing the market. Please try again.');
@@ -72,6 +128,7 @@ const App: React.FC = () => {
     setError(null);
     setCompetitorAnalysisResult(null);
     setGoToMarketStrategyResult(null); // Reset subsequent steps
+    setAgentSolutionResult(null);
     setCompetitorIndustry(industry);
     setSpecificProblem(problem);
     setLoadingMessage(`Analyzing competitors for ${industry}...`);
@@ -79,6 +136,7 @@ const App: React.FC = () => {
     try {
       const result = await getCompetitorAnalysis(industry, problem);
       setCompetitorAnalysisResult(result);
+      setActiveAgent('competitorAnalysis');
     } catch (e) {
       console.error(e);
       setError('An error occurred during competitor analysis. Please try again.');
@@ -95,10 +153,12 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setGoToMarketStrategyResult(null);
+    setAgentSolutionResult(null);
     setLoadingMessage(`Developing Go-to-Market strategy...`);
+    setActiveAgent('goToMarketStrategy');
 
     try {
-      const result = await getGoToMarketStrategy(marketAnalysisResult, competitorAnalysisResult, competitorIndustry, specificProblem);
+      const result = await getGoToMarketStrategy(marketAnalysisResult, competitorAnalysisResult);
       setGoToMarketStrategyResult(result);
     } catch(e) {
       console.error(e);
@@ -106,30 +166,60 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [marketAnalysisResult, competitorAnalysisResult, competitorIndustry, specificProblem]);
+  }, [marketAnalysisResult, competitorAnalysisResult]);
+  
+  const handleAgentSolutionRequest = useCallback(async () => {
+      if (!trendingTopicsResult || !marketAnalysisResult || !competitorAnalysisResult || !goToMarketStrategyResult) {
+          setError('All previous agent analysis data is required to generate the final solution.');
+          return;
+      }
+      setIsLoading(true);
+      setError(null);
+      setAgentSolutionResult(null);
+      setLoadingMessage('Generating implementation blueprint...');
+      setActiveAgent('agentSolution');
 
+      try {
+          const result = await getAgentSolution(
+              trendingTopicsResult,
+              marketAnalysisResult,
+              competitorAnalysisResult,
+              goToMarketStrategyResult
+          );
+          setAgentSolutionResult(result);
+      } catch (e) {
+          console.error(e);
+          setError('An error occurred while generating the final solution blueprint. Please try again.');
+      } finally {
+          setIsLoading(false);
+      }
+  }, [trendingTopicsResult, marketAnalysisResult, competitorAnalysisResult, goToMarketStrategyResult]);
+
+  const handleSelectTrendAndAnalyzeMarket = useCallback((topicName: string) => {
+    handleMarketAnalysisRequest(topicName);
+  }, [handleMarketAnalysisRequest]);
+  
   const handleAnalyzeCompetitorsFromIdealSolution = useCallback((idealSolution: string) => {
     if (!industry) {
       setError("Industry context is missing for competitor analysis.");
       return;
     }
-    setActiveAgent('competitorAnalysis');
-    
-    const mainElement = document.querySelector('main');
-    mainElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
     handleCompetitorAnalysisRequest(industry, idealSolution);
   }, [industry, handleCompetitorAnalysisRequest]);
 
   const handleGoToMarket = useCallback(() => {
-    setActiveAgent('goToMarketStrategy');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+    handleGoToMarketStrategyRequest();
+  }, [handleGoToMarketStrategyRequest]);
+
+  const handleGenerateBlueprint = useCallback(() => {
+      handleAgentSolutionRequest();
+  }, [handleAgentSolutionRequest]);
   
-  const AgentButton: React.FC<{agent: Agent, label: string, icon: React.ReactNode}> = ({ agent, label, icon }) => (
+  const AgentButton: React.FC<{agent: Agent, label: string, icon: React.ReactNode, enabled: boolean}> = ({ agent, label, icon, enabled }) => (
     <button 
-        onClick={() => setActiveAgent(agent)}
-        className={`flex items-center justify-center gap-3 px-4 py-2 text-sm sm:text-base sm:px-6 sm:py-3 font-semibold rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-brand-primary ${activeAgent === agent ? 'bg-white text-content-primary shadow-lg scale-105' : 'bg-white/60 text-content-secondary hover:bg-white hover:scale-100'}`}
+        onClick={() => enabled && setActiveAgent(agent)}
+        disabled={!enabled}
+        className={`flex items-center justify-center gap-3 px-4 py-2 text-sm sm:text-base sm:px-6 sm:py-3 font-semibold rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-brand-primary ${activeAgent === agent ? 'bg-white text-content-primary shadow-lg scale-105' : 'bg-white/60 text-content-secondary hover:bg-white hover:scale-100'} ${!enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
         {icon}
         {label}
@@ -146,24 +236,40 @@ const App: React.FC = () => {
               AI Business Agent Suite
             </h1>
             <p className="mt-4 text-lg max-w-2xl text-content-secondary">
-              Strategic insights at your fingertips. Select an agent to begin your analysis.
+              From trend discovery to implementation, a guided 5-step workflow.
             </p>
           </div>
       </header>
       
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         <nav className="flex justify-center flex-wrap gap-2 sm:gap-4 -mt-16 sm:-mt-18 z-20 relative">
-            <AgentButton agent="marketVerification" label="Market Verification" icon={<MarketVerificationIcon className="w-6 h-6"/>} />
-            <AgentButton agent="competitorAnalysis" label="Competitor Analysis" icon={<CompetitorAnalysisIcon className="w-6 h-6"/>} />
-            <AgentButton agent="goToMarketStrategy" label="Go-to-Market Strategy" icon={<GoToMarketIcon className="w-6 h-6"/>} />
+            <AgentButton agent="trendDiscovery" label="1. Trend Discovery" icon={<TrendDiscoveryIcon className="w-6 h-6"/>} enabled={true} />
+            <AgentButton agent="marketVerification" label="2. Market Verification" icon={<MarketVerificationIcon className="w-6 h-6"/>} enabled={!!marketAnalysisResult} />
+            <AgentButton agent="competitorAnalysis" label="3. Competitor Analysis" icon={<CompetitorAnalysisIcon className="w-6 h-6"/>} enabled={!!competitorAnalysisResult} />
+            <AgentButton agent="goToMarketStrategy" label="4. Go-to-Market" icon={<GoToMarketIcon className="w-6 h-6"/>} enabled={!!goToMarketStrategyResult} />
+            <AgentButton agent="agentSolution" label="5. Agent Solution" icon={<AgentSolutionIcon className="w-6 h-6"/>} enabled={!!agentSolutionResult} />
         </nav>
 
         <main className="mt-12">
+          {activeAgent === 'trendDiscovery' && (
+            <div className="animate-fade-in">
+              <TrendDiscoveryForm onSubmit={handleTrendDiscoveryRequest} isLoading={isLoading} />
+              {trendingTopicsResult && !isLoading && !error && (
+                <div className="mt-12 animate-fade-in">
+                  <TrendingTopicsResultDisplay 
+                    result={trendingTopicsResult}
+                    onAnalyzeMarket={handleSelectTrendAndAnalyzeMarket}
+                    areaOfInterest={areaOfInterest}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
           {activeAgent === 'marketVerification' && (
             <div className="animate-fade-in">
-              <MarketVerificationForm onSubmit={(industry) => handleMarketAnalysisRequest(industry)} isLoading={isLoading} />
               {marketAnalysisResult && !isLoading && !error && (
-                <div className="mt-12 animate-fade-in">
+                <div className="animate-fade-in">
                   <MarketVerificationResultDisplay 
                     result={marketAnalysisResult} 
                     industry={industry} 
@@ -179,16 +285,8 @@ const App: React.FC = () => {
 
           {activeAgent === 'competitorAnalysis' && (
              <div className="animate-fade-in">
-              <CompetitorAnalysisForm 
-                onSubmit={handleCompetitorAnalysisRequest} 
-                isLoading={isLoading} 
-                industry={competitorIndustry}
-                problem={specificProblem}
-                onIndustryChange={setCompetitorIndustry}
-                onProblemChange={setSpecificProblem}
-              />
                {competitorAnalysisResult && !isLoading && !error && (
-                <div className="mt-12 animate-fade-in">
+                <div className="animate-fade-in">
                   <CompetitorAnalysisResultDisplay result={competitorAnalysisResult} industry={competitorIndustry} problem={specificProblem} onGoToMarketStrategy={handleGoToMarket} gradientIndex={3}/>
                 </div>
               )}
@@ -197,66 +295,55 @@ const App: React.FC = () => {
 
           {activeAgent === 'goToMarketStrategy' && (
             <div className="animate-fade-in">
-              {!competitorAnalysisResult ? (
-                <div className="text-center p-8 bg-white rounded-2xl shadow-lg animate-slide-in-up max-w-2xl mx-auto">
-                    <GoToMarketIcon className="w-16 h-16 mx-auto text-brand-primary opacity-50 mb-4" />
-                    <h3 className="text-xl font-semibold text-content-primary">Prerequisite Step Missing</h3>
-                    <p className="mt-2 text-content-secondary">
-                        Please run a Competitor Analysis first to provide the necessary context for developing a Go-to-Market strategy.
-                    </p>
-                    <button onClick={() => setActiveAgent('competitorAnalysis')} className="mt-6 px-6 py-2 bg-brand-primary text-white font-semibold rounded-lg shadow-md hover:bg-brand-dark transition-all">
-                        Go to Competitor Analysis
-                    </button>
+              {isLoading && activeAgent === 'goToMarketStrategy' && (
+                <AgentLoadingIndicator 
+                    title="Developing Go-to-Market Strategy"
+                    steps={goToMarketStrategySteps}
+                />
+              )}
+              {goToMarketStrategyResult && !isLoading && !error && (
+                <div className="animate-fade-in">
+                  <GoToMarketStrategyResultDisplay result={goToMarketStrategyResult} onGenerateBlueprint={handleGenerateBlueprint} gradientIndex={4}/>
                 </div>
-              ) : (
-                <>
-                  {isLoading && (
-                    <AgentLoadingIndicator 
-                        title="Developing Go-to-Market Strategy"
-                        steps={goToMarketStrategySteps}
-                    />
-                  )}
-                  {!goToMarketStrategyResult && !isLoading && (
-                    <div className="text-center p-8 bg-white rounded-2xl shadow-lg animate-slide-in-up max-w-2xl mx-auto">
-                      <GoToMarketIcon className="w-16 h-16 mx-auto text-brand-primary opacity-50 mb-4" />
-                      <h3 className="text-xl font-semibold text-content-primary">Ready for the Final Step?</h3>
-                      <p className="mt-2 text-content-secondary">
-                          Our AI agent will now analyze the previous results, conduct its own research, and define a target audience and strategic path forward.
-                      </p>
-                      <button 
-                        onClick={handleGoToMarketStrategyRequest} 
-                        className="mt-6 inline-flex items-center gap-3 px-8 py-3 bg-brand-primary text-white font-semibold rounded-lg shadow-md hover:bg-brand-dark transition-all transform hover:scale-105"
-                      >
-                        <GoToMarketIcon className="w-6 h-6" />
-                        Develop Go-to-Market Strategy
-                      </button>
-                    </div>
-                  )}
-                  
-                  {goToMarketStrategyResult && !isLoading && !error && (
-                    <div className="mt-12 animate-fade-in">
-                      <GoToMarketStrategyResultDisplay result={goToMarketStrategyResult} gradientIndex={4}/>
-                    </div>
-                  )}
-                </>
               )}
             </div>
           )}
 
+          {activeAgent === 'agentSolution' && (
+            <div className="animate-fade-in">
+              {isLoading && activeAgent === 'agentSolution' && (
+                 <AgentLoadingIndicator 
+                    title="Generating Implementation Blueprint"
+                    steps={agentSolutionSteps}
+                    gradientClass="from-rose-500 via-fuchsia-500 to-indigo-500"
+                />
+              )}
+              {agentSolutionResult && !isLoading && !error && (
+                <div className="animate-fade-in">
+                    <AgentSolutionResultDisplay result={agentSolutionResult} gradientIndex={5} />
+                </div>
+              )}
+            </div>
+          )}
+          
           {error && (
             <div className="mt-8 text-center bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-lg animate-fade-in">
               <p>{error}</p>
+              <button onClick={resetAll} className="mt-2 text-sm font-semibold underline">Start Over</button>
             </div>
           )}
 
-          {isLoading && !marketAnalysisResult && !competitorAnalysisResult && !goToMarketStrategyResult && (
+          {isLoading && (
             <div className="mt-12 text-center flex flex-col items-center justify-center animate-fade-in">
-              <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-brand-primary"></div>
-              <h2 className="text-2xl font-semibold mt-6 text-content-primary">{loadingMessage}</h2>
-              <p className="text-content-tertiary mt-2">Our AI agent is conducting deep analysis. This may take a moment.</p>
+              {activeAgent !== 'goToMarketStrategy' && activeAgent !== 'agentSolution' ? (
+                <>
+                  <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-brand-primary"></div>
+                  <h2 className="text-2xl font-semibold mt-6 text-content-primary">{loadingMessage}</h2>
+                  <p className="text-content-tertiary mt-2">Our AI agent is conducting deep analysis. This may take a moment.</p>
+                </>
+              ) : null}
             </div>
           )}
-
         </main>
 
         <footer className="text-center mt-16 py-6 border-t border-gray-200">

@@ -61,3 +61,49 @@ export interface GoToMarketStrategyResult {
   redFlags: RedFlag[];
   groundingMetadata?: GroundingChunk[];
 }
+
+// Types for Trend Discovery Agent (Agent 0)
+export interface TrendingTopic {
+  topicName: string;
+  reasonForTrend: string;
+  exampleDiscussion: string;
+}
+
+export interface TrendDiscoveryResult {
+  trendingTopics: TrendingTopic[];
+  groundingMetadata?: GroundingChunk[];
+}
+
+// Types for Agent Solution (Agent 5)
+export interface CoreFeature {
+    feature: string;
+    description: string;
+    userProblemSolved: string;
+}
+
+export interface TechStackItem {
+    category: 'Frontend' | 'Backend' | 'Database' | 'AI / ML Model' | 'Deployment' | 'Other';
+    tool: string;
+    justification: string;
+}
+
+export interface RoadmapPhase {
+    phase: string;
+    duration: string;
+    milestones: string[];
+}
+
+export interface Risk {
+    risk: string;
+    mitigation: string;
+}
+
+export interface AgentSolutionResult {
+    solutionOverview: string;
+    coreFeatures: CoreFeature[];
+    techStack: TechStackItem[];
+    implementationRoadmap: RoadmapPhase[];
+    risksAndMitigations: Risk[];
+    ethicalConsiderations: string;
+    groundingMetadata?: GroundingChunk[];
+}
