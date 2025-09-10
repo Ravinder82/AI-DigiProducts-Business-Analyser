@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 interface CompetitorAnalysisFormProps {
   onSubmit: (industry: string, problem: string) => void;
   isLoading: boolean;
+  industry: string;
+  problem: string;
+  onIndustryChange: (value: string) => void;
+  onProblemChange: (value: string) => void;
 }
 
-const CompetitorAnalysisForm: React.FC<CompetitorAnalysisFormProps> = ({ onSubmit, isLoading }) => {
-  const [industry, setIndustry] = useState('');
-  const [problem, setProblem] = useState('');
+const CompetitorAnalysisForm: React.FC<CompetitorAnalysisFormProps> = ({ onSubmit, isLoading, industry, problem, onIndustryChange, onProblemChange }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +27,7 @@ const CompetitorAnalysisForm: React.FC<CompetitorAnalysisFormProps> = ({ onSubmi
             id="ca-industry-input"
             type="text"
             value={industry}
-            onChange={(e) => setIndustry(e.target.value)}
+            onChange={(e) => onIndustryChange(e.target.value)}
             placeholder="e.g., Project Management Software"
             className="w-full px-4 py-3 bg-white text-content-primary border border-black/10 rounded-md focus:ring-2 focus:ring-brand-primary focus:outline-none transition duration-200 placeholder:text-content-secondary"
             disabled={isLoading}
@@ -35,13 +37,12 @@ const CompetitorAnalysisForm: React.FC<CompetitorAnalysisFormProps> = ({ onSubmi
           <label htmlFor="problem-input" className="block text-lg font-medium mb-2 text-content-primary">
             Specific Problem They Solve
           </label>
-          <input
+          <textarea
             id="problem-input"
-            type="text"
             value={problem}
-            onChange={(e) => setProblem(e.target.value)}
+            onChange={(e) => onProblemChange(e.target.value)}
             placeholder="e.g., Task tracking for small creative teams"
-            className="w-full px-4 py-3 bg-white text-content-primary border border-black/10 rounded-md focus:ring-2 focus:ring-brand-primary focus:outline-none transition duration-200 placeholder:text-content-secondary"
+            className="w-full px-4 py-3 bg-white text-content-primary border border-black/10 rounded-md focus:ring-2 focus:ring-brand-primary focus:outline-none transition duration-200 placeholder:text-content-secondary min-h-[100px]"
             disabled={isLoading}
           />
         </div>

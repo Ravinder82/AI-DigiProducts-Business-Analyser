@@ -35,3 +35,29 @@ export interface CompetitorAnalysisResult {
   competitors: Competitor[];
   marketGaps: MarketGap[];
 }
+
+// Types for Go-to-Market Strategy Agent
+export interface MarketIndicator {
+  indicator: string;
+  description: string;
+}
+
+export interface RedFlag {
+  flag: string;
+  description: string;
+}
+
+export interface GroundingChunk {
+  web?: {
+    uri: string;
+    title: string;
+  };
+}
+
+export interface GoToMarketStrategyResult {
+  targetAudience: string;
+  identifiedProblems: string;
+  marketInterestIndicators: MarketIndicator[];
+  redFlags: RedFlag[];
+  groundingMetadata?: GroundingChunk[];
+}

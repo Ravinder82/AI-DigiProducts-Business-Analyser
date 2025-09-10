@@ -3,17 +3,18 @@ import type { MarketAnalysisResult } from '../types';
 import PainPointCard from './PainPointCard';
 import WordCloudDisplay from './WordCloudDisplay';
 import AnalysisSection from './AnalysisSection';
-import { RefreshIcon } from './Icons';
+import { RefreshIcon, CompetitorAnalysisIcon } from './Icons';
 
 interface MarketVerificationResultDisplayProps {
   result: MarketAnalysisResult;
   industry: string;
   onDeeperResearch: () => void;
+  onAnalyzeCompetitors: (idealSolution: string) => void;
   isLoading: boolean;
   gradientIndex: number;
 }
 
-const MarketVerificationResultDisplay: React.FC<MarketVerificationResultDisplayProps> = ({ result, industry, onDeeperResearch, isLoading, gradientIndex }) => {
+const MarketVerificationResultDisplay: React.FC<MarketVerificationResultDisplayProps> = ({ result, industry, onDeeperResearch, onAnalyzeCompetitors, isLoading, gradientIndex }) => {
   const allPainPointText = result.painPoints
     .map(p => `${p.point} ${p.exampleQuote} ${p.emotionalImpact} ${p.workaround}`)
     .join(' ');
@@ -75,7 +76,20 @@ const MarketVerificationResultDisplay: React.FC<MarketVerificationResultDisplayP
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <GradientWrapper offset={4}>
-          <AnalysisSection title="The Ideal Solution">
+          <AnalysisSection 
+            title="The Ideal Solution"
+            action={
+              <button
+                onClick={() => onAnalyzeCompetitors(result.idealSolution)}
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-brand-primary bg-white/60 border border-slate-300 rounded-lg hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                aria-label="Analyze competitors for this ideal solution"
+              >
+                <CompetitorAnalysisIcon className="w-5 h-5" />
+                Analyze Competitors
+              </button>
+            }
+          >
             <p>{result.idealSolution}</p>
           </AnalysisSection>
         </GradientWrapper>

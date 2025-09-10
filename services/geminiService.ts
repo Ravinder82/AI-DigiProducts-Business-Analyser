@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import type { MarketAnalysisResult, CompetitorAnalysisResult } from '../types';
+import type { MarketAnalysisResult, CompetitorAnalysisResult, GoToMarketStrategyResult } from '../types';
 
 if (!process.env.API_KEY) {
   throw new Error("API_KEY environment variable is not set.");
@@ -116,6 +116,96 @@ export const getCompetitorAnalysis = async (industry: string, problem: string): 
   } catch (error) {
     console.error("Error fetching or parsing competitor analysis:", error);
     if (error instanceof SyntaxError) throw new Error("Failed to parse the AI's response (invalid JSON).");
+    throw new Error("An unexpected error occurred communicating with the AI service.");
+  }
+};
+
+
+// --- Go-to-Market Strategy Agent ---
+export const getGoToMarketStrategy = async (
+  marketAnalysis: MarketAnalysisResult,
+  competitorAnalysis: CompetitorAnalysisResult,
+  industry: string,
+  problem: string
+): Promise<GoToMarketStrategyResult> => {
+  const prompt = `
+    You are a senior Go-to-Market strategist and venture capitalist. Your expertise is in evaluating new business ideas based on market data.
+    Your task is to analyze the provided market and competitor data to first identify a precise target audience and their core problems, then produce a list of crucial market indicators and strategic red flags.
+
+    **Analysis Context:**
+    - Industry: "${industry}"
+    - Initial Problem Concept: "${problem}"
+
+    **Market Verification Data (Agent 1 Output):**
+    ${JSON.stringify(marketAnalysis, null, 2)}
+
+    **Competitor Analysis Data (Agent 2 Output):**
+    ${JSON.stringify(competitorAnalysis, null, 2)}
+
+    **Your Mission:**
+    1.  **Synthesize and Research:** Synthesize the data above. Use your deep research and web search capabilities to refine the "undervaluedSegment", "painPoints", and "marketGaps" into a concrete user profile.
+    2.  **Define Audience & Problems:** Clearly define the most promising target audience and summarize the specific problems they face that a new product could solve.
+    3.  **Generate Strategic Outline:** Based on your new definition of the audience and problems, and the competitive landscape, generate:
+        - 5 specific, actionable signals that would confirm strong market interest.
+        - 5 critical red flags that suggest the idea should be pivoted or abandoned.
+
+    **Output Format:**
+    You MUST respond with a single, valid JSON object. Do not add any commentary or markdown formatting before or after the JSON. The JSON structure MUST be as follows:
+    {
+      "targetAudience": "A detailed description of the most promising target audience, synthesized from the provided data and your research.",
+      "identifiedProblems": "A summary of the specific, high-priority problems this audience faces, derived from pain points, market gaps, and your research.",
+      "marketInterestIndicators": [
+        {
+          "indicator": "A concise summary of the market interest indicator.",
+          "description": "A detailed explanation of what to look for and how to measure it."
+        }
+      ],
+      "redFlags": [
+        {
+          "flag": "A concise summary of the red flag.",
+          "description": "A detailed explanation of the warning sign and its implications."
+        }
+      ]
+    }
+  `;
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction: "You are a senior Go-to-Market strategist and venture capitalist. Your expertise lies in evaluating new business ideas based on market data. Your task is to analyze the provided competitor analysis and target audience profile to produce a list of crucial market indicators and strategic red flags. Your insights must be sharp, actionable, and directly tied to the data provided. Your output must strictly adhere to the provided JSON structure.",
+        tools: [{googleSearch: {}}],
+      },
+    });
+
+    const groundingMetadata = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+    let jsonText = response.text.trim();
+
+    if (jsonText.startsWith("```json")) {
+        jsonText = jsonText.substring(7, jsonText.length - 3).trim();
+    } else if (jsonText.startsWith("```")) {
+        jsonText = jsonText.substring(3, jsonText.length - 3).trim();
+    }
+
+    const parsedData = JSON.parse(jsonText);
+    
+     if (!parsedData.targetAudience || !parsedData.identifiedProblems || !parsedData.marketInterestIndicators || !parsedData.redFlags) {
+        throw new Error("Invalid data structure received from API.");
+    }
+    return { ...parsedData, groundingMetadata };
+  } catch (error) {
+    let rawResponseText = "Not available";
+    // Attempt to access raw response if possible
+    // This is a hypothetical property; actual error structure may vary
+    if (error instanceof Error && 'response' in error) {
+      // rawResponseText = (error as any).response?.text || rawResponseText;
+    }
+    
+    if (error instanceof SyntaxError) {
+      console.error("Failed to parse JSON. Raw AI response:", rawResponseText);
+      throw new Error("Failed to parse the AI's response (invalid JSON). Check the console for the raw output.");
+    }
+    console.error("Error fetching or parsing GTM strategy:", error);
     throw new Error("An unexpected error occurred communicating with the AI service.");
   }
 };
