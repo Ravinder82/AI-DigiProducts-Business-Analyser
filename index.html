@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Business Agent Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'brand-primary': '#334155', // slate-700
+              'brand-secondary': '#475569', // slate-600
+              'brand-light': '#f1f5f9', // slate-100
+              'brand-dark': '#1e293b', // slate-800
+              'base-100': '#ffffff', // white
+              'base-200': '#f8fafc', // slate-50
+              'base-300': 'e2e8f0', // slate-200
+              'content-primary': '#0f172a', // slate-900
+              'content-secondary': '#334155', // slate-700
+              'content-tertiary': '#64748b', // slate-500
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-in-out',
+              'slide-in-up': 'slideInUp 0.5s ease-in-out',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: 0 },
+                '100%': { opacity: 1 },
+              },
+              slideInUp: {
+                '0%': { transform: 'translateY(20px)', opacity: 0 },
+                '100%': { transform: 'translateY(0)', opacity: 1 },
+              },
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      .card {
+        border-radius: 1rem; /* rounded-2xl */
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+      }
+      .card:hover {
+        transform: scale(1.02);
+        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      }
+      /* Mesh Gradients */
+      .gradient-bg-1 {
+        background-color: #fde68a;
+        background-image: radial-gradient(at 20% 15%, #93c5fd 0px, transparent 50%),
+                          radial-gradient(at 85% 80%, #fca5a5 0px, transparent 50%);
+      }
+      .gradient-bg-2 {
+        background-color: #fecaca;
+        background-image: radial-gradient(at 10% 90%, #fcd34d 0px, transparent 50%),
+                          radial-gradient(at 90% 20%, #a5b4fc 0px, transparent 50%);
+      }
+      .gradient-bg-3 {
+        background-color: #fed7aa;
+        background-image: radial-gradient(at 5% 5%, #60a5fa 0px, transparent 50%),
+                          radial-gradient(at 70% 95%, #fde047 0px, transparent 50%);
+      }
+      .gradient-bg-4 {
+        background-color: #d1d5db;
+        background-image: radial-gradient(at 15% 85%, #fda4af 0px, transparent 50%),
+                          radial-gradient(at 80% 10%, #6ee7b7 0px, transparent 50%);
+      }
+      .gradient-bg-5 {
+        background-color: #e0e7ff;
+        background-image: radial-gradient(at 50% 50%, #c4b5fd 0px, transparent 50%),
+                          radial-gradient(at 90% 90%, #f9a8d4 0px, transparent 50%);
+      }
+      .gradient-bg-6 {
+        background-color: #fef3c7;
+        background-image: radial-gradient(at 5% 95%, #fca5a5 0px, transparent 50%),
+                          radial-gradient(at 80% 25%, #facc15 0px, transparent 50%);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.17.0",
+    "recharts": "https://aistudiocdn.com/recharts@^2.12.7"
+  }
+}
+</script>
+</head>
+  <body class="bg-base-200 text-content-secondary">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

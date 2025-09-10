@@ -1,0 +1,5 @@
+{
+  "name": "AI Business Agent Suite",
+  "description": "An AI-powered agent suite for business strategy. Includes a Market Verification agent to find unmet needs and a Competitor Analysis agent to identify market gaps.",
+  "requestFramePermissions": []
+}
